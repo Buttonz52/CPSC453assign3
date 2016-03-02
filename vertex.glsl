@@ -40,6 +40,18 @@ void main()
 					  0,0,1,0,
 					  -0.7,-0.3,0,1);	
 	}		
+	if(scene == 3)
+	{
+		scaMatrix = mat4(0.55,0,0,0,
+					0, 0.55,0,0,
+					0,0,1,0,
+					0,0,0,1);
+					
+		traMatrix = mat4(1,0,0,0,
+					  0,1,0,0,
+					  0,0,1,0,
+					  -0.8,0.0,0,1);	
+	}
 
 	
     // assign vertex position without modification
