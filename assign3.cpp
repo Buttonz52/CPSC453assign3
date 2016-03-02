@@ -434,17 +434,25 @@ void DestroyGeometry(MyGeometry *geometry)
 
 void RenderGlyphs(MyGeometry *geometry, MyShader *shader, vector<int> degrees)
 {
+	cout << degrees.size() << endl;
+	
 	glUseProgram(shader->program);
     
     int sceLoc = glGetUniformLocation(shader->program, "scene");    
     int curLoc = glGetUniformLocation(shader->program, "curveType");    
     glUniform1i(sceLoc, scene);
-    //glUniform1i(curLoc, curveType);
-
+    
     glBindVertexArray(geometry->vertexArray);
-
+	
 	if(scene == 3)
-		glDrawArrays(GL_PATCHES, 0, 4);
+	{
+		for(uint i = 0; i < degrees.size(); i++)
+		{
+			glUniform1i(curLoc, degrees[i]);
+			glDrawArrays(GL_PATCHES, i*4, 4);
+		}
+	}
+		
 
     // reset state to default (no shader or geometry bound)
     glBindVertexArray(0);

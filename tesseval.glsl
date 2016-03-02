@@ -6,6 +6,9 @@ in vec3 te_color[];
 
 out vec3 color;
 
+uniform int scene;
+uniform int curveType;
+
 vec4 Bezier(vec4 a)
 	{
 		return a;
@@ -25,10 +28,6 @@ vec4 cubicBezier(vec4 a, vec4 b, vec4 c, vec4 d, float u)
 	{
 		return mix(quadracticBezier(a,b,c,u), quadracticBezier(b,c,d,u),u);
 	}
-	
-	
-uniform int scene;
-uniform int curveType;
 
 void main()
 {
