@@ -269,14 +269,14 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 	int u = 0; //current vertex index
 	float advance = 0;
 	
-	GLfloat vertices[50000][2] = {
+	GLfloat vertices[512][2] = {
 		{ 1.0/2.5,  1.0/2.5},
 		{ 2.0/2.5, -1.0/2.5},
 		{ 0.0/2.5, -1.0/2.5},
 		{ 0, 0 }//d 
 		};   
 		
-    GLfloat curveColours[50000][3] = {
+    GLfloat curveColours[512][3] = {
         { 1.0, 0.0, 0.0 },
         { 1.0, 0.0, 0.0 },             
         { 1.0, 0.0, 0.0 },             
@@ -295,7 +295,7 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 			for(uint k = 0; k < fNameGlyphs[i].contours[j].size(); k++)
 			{	
 				int segDegree = fNameGlyphs[i].contours[j][k].degree;
-
+				
 				if(segDegree == 0)
 				{
 					vertices[u][0] = fNameGlyphs[i].contours[j][k].x[0]+advance;
@@ -308,7 +308,6 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 					vertices[u+3][1] = 0;
 				}
 				
-				
 				if(segDegree == 1)
 				{
 					vertices[u][0] = fNameGlyphs[i].contours[j][k].x[0]+advance;
@@ -319,6 +318,8 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 					vertices[u+2][1] = 0;	//pad
 					vertices[u+3][0] = 0;
 					vertices[u+3][1] = 0;
+					//cout << "test1" << endl;
+					
 				}
 				
 				if(segDegree == 2)
@@ -344,7 +345,6 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 					vertices[u+3][0] = fNameGlyphs[i].contours[j][k].x[3]+advance;
 					vertices[u+3][1] = fNameGlyphs[i].contours[j][k].y[3];
 				}
-				
 				u = u + 4;
 				
 			}
@@ -359,6 +359,24 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 		curveColours[i][1] = 0;
 		curveColours[i][2] = 0;
 	}
+	/*
+	MyGlyph B = ge->ExtractGlyph('B');
+		
+	cout << B.contours[0][0].degree << endl; // degree of segment
+	cout << B.contours.size() << endl;		// number of contours
+	
+	cout << B.contours[0].size() << endl;	// number of segments in first contour
+	
+	cout << B.contours[0][0].x[0] << endl; // x position of point 0
+	cout << B.contours[0][0].y[0] << endl; // y position of point 0
+	cout << B.contours[0][0].x[1] << endl; // x position of point 1
+	cout << B.contours[0][0].y[1] << endl; // y position of point 1
+	
+	*/
+
+	//vertices[i][0] = xpoint;
+	//vertices[i][1] = ypoint;
+
 
     geometry->elementCount = 20;
 
@@ -424,14 +442,6 @@ void RenderGlyphs(MyGeometry *geometry, MyShader *shader, vector<int> *degrees)
     glBindVertexArray(geometry->vertexArray);
 	
 	if(scene == 3)
-	{
-		for(uint i = 0; i < degrees->size(); i++)
-		{
-			glUniform1i(curLoc, degrees->at(i));
-			glDrawArrays(GL_PATCHES, i*4, 4);
-		}
-	}
-	if(scene == 4)
 	{
 		for(uint i = 0; i < degrees->size(); i++)
 		{
@@ -625,8 +635,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		scene = 2;
 	if (key == GLFW_KEY_3 && action == GLFW_PRESS)
 		scene = 3;		
-	if (key == GLFW_KEY_4 && action == GLFW_PRESS)
-		scene = 4;		
 	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
 		version = 1;		
 	if (key == GLFW_KEY_W && action == GLFW_PRESS)
@@ -677,15 +685,11 @@ int main(int argc, char *argv[])
       cout << "font Inconsolata.otf loaded" << endl;
       
    	GlyphExtractor* ge2 = new GlyphExtractor();
-    if(!ge2->LoadFontFile("SourceSansPro-Regular.otf"))
+    if(!ge->LoadFontFile("SourceSansPro-Regular.otf"))
       cout << "font Inconsolata.otf loaded" << endl;
       
   	GlyphExtractor* ge3 = new GlyphExtractor();
-    if(!ge3->LoadFontFile("Inconsolata.otf"))
-      cout << "font Inconsolata.otf loaded" << endl;
-      
-    GlyphExtractor* ge4 = new GlyphExtractor();
-    if(!ge4 ->LoadFontFile("AlexBrush-Regular.ttf"))
+    if(!ge->LoadFontFile("Inconsolata.otf"))
       cout << "font Inconsolata.otf loaded" << endl;
 
     // query and print out information about our OpenGL environment
@@ -706,15 +710,11 @@ int main(int argc, char *argv[])
 	vector<MyGlyph> fNameGlyphs;
 	vector<MyGlyph> fNameGlyphs2;
 	vector<MyGlyph> fNameGlyphs3;
-
 	vector<int> degrees;
 	vector<int> degrees2;
 	vector<int> degrees3;
-	vector<int> degrees4;
-
 
 	string fName = "Petras";
-	string bf = "The";
 	
 	//First name array init
 	for(uint i = 0; i < fName.size(); i++)
@@ -727,7 +727,6 @@ int main(int argc, char *argv[])
 		fNameGlyphs3.push_back(newGlyph3);	
 	}
 	
-
 	//find each degree of each seg from each contour from each glyph
 	for(uint i = 0; i < fNameGlyphs.size(); i++)
 	{
@@ -739,7 +738,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-
+	
 	for(uint i = 0; i < fNameGlyphs2.size(); i++)
 	{
 		for(uint j = 0; j < fNameGlyphs2[i].contours.size(); j++)
@@ -750,7 +749,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
-
+	
 	for(uint i = 0; i < fNameGlyphs3.size(); i++)
 	{
 		for(uint j = 0; j < fNameGlyphs3[i].contours.size(); j++)
@@ -766,6 +765,10 @@ int main(int argc, char *argv[])
     MyGeometry geometry, glyphGeometry;
     if (!InitializeGeometry(&geometry))
         cout << "Program failed to intialize geometry!" << endl;
+       
+    if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs))
+        cout << "Program failed to intialize geometry!" << endl;
+
     // run an event-triggered main loop
     while (!glfwWindowShouldClose(window))
     {        
@@ -776,42 +779,36 @@ int main(int argc, char *argv[])
         
         if(font == 1)
         {
-			if(scene == 3)
-			{
-				if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs))
-					cout << "Program failed to intialize geometry!" << endl;
-					
-				RenderGlyphs(&glyphGeometry, &shader, &degrees);
-			
-				RenderGlyphLine(&glyphGeometry, &lineShader, &degrees);
-			}
+			if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs))
+				cout << "Program failed to intialize geometry!" << endl;
+				
+			RenderGlyphs(&glyphGeometry, &shader, &degrees);
+        
+			RenderGlyphLine(&glyphGeometry, &lineShader, &degrees);
 		}
         if(font == 2)
         {
-			if(scene == 3)
-			{
-				if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs2))
-					cout << "Program failed to intialize geometry!" << endl;
-					
-				RenderGlyphs(&glyphGeometry, &shader, &degrees2);
-			
-				RenderGlyphLine(&glyphGeometry, &lineShader, &degrees2);				
-			}
-
+			if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs2))
+				cout << "Program failed to intialize geometry!" << endl;
+				
+			RenderGlyphs(&glyphGeometry, &shader, &degrees2);
+        
+			RenderGlyphLine(&glyphGeometry, &lineShader, &degrees2);
 		}
         if(font == 3)
         {
-			if(scene == 3)
-			{
-				if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs3))
-					cout << "Program failed to intialize geometry!" << endl;
-					
-				RenderGlyphs(&glyphGeometry, &shader, &degrees3);
-			
-				RenderGlyphLine(&glyphGeometry, &lineShader, &degrees3);				
-			}
+			if (!InitializeGlyphGeometry(&glyphGeometry, fNameGlyphs3))
+				cout << "Program failed to intialize geometry!" << endl;
+				
+			RenderGlyphs(&glyphGeometry, &shader, &degrees3);
+        
+			RenderGlyphLine(&glyphGeometry, &lineShader, &degrees3);
 		}
-		           
+		       
+        RenderGlyphs(&glyphGeometry, &shader, &degrees);
+        
+        RenderGlyphLine(&glyphGeometry, &lineShader, &degrees);
+        
         // scene is rendered to the back buffer, so swap to front for display
         glfwSwapBuffers(window);
 
