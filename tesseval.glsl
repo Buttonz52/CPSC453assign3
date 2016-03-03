@@ -52,7 +52,7 @@ void main()
 		ans = quadracticBezier(p0,p1,p2,u);
 	}
 	
-	if(scene == 3)
+	if(scene == 3 || scene == 4)
 	{	
 		if(curveType == 0)
 		{

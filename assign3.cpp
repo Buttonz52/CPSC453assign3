@@ -29,6 +29,10 @@ int scene = 1;
 int version = 1;
 int curveType = 0;
 int font = 1;
+int moreFont = 1;
+float delta = 1;
+float delta2 = 0.05;
+bool hasScrolled = false;
 // --------------------------------------------------------------------------
 // OpenGL utility and support function prototypes
 
@@ -269,21 +273,10 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 	int u = 0; //current vertex index
 	float advance = 0;
 	
-	GLfloat vertices[50000][2] = {
-		{ 1.0/2.5,  1.0/2.5},
-		{ 2.0/2.5, -1.0/2.5},
-		{ 0.0/2.5, -1.0/2.5},
-		{ 0, 0 }//d 
-		};   
-		
-    GLfloat curveColours[50000][3] = {
-        { 1.0, 0.0, 0.0 },
-        { 1.0, 0.0, 0.0 },             
-        { 1.0, 0.0, 0.0 },             
-        { 1.0, 0.0, 0.0 } 
-		};    
+	GLfloat vertices[50000][2];
+	GLfloat curveColours[50000][3]; //initialize colours 2d array
 	
-	//Get ith Glyph
+ 
 	for(uint i = 0; i < fNameGlyphs.size(); i++)
 	{
 
@@ -307,7 +300,6 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 					vertices[u+3][0] = 0;
 					vertices[u+3][1] = 0;
 				}
-				
 				
 				if(segDegree == 1)
 				{
@@ -353,12 +345,33 @@ bool InitializeGlyphGeometry(MyGeometry *geometry, vector<MyGlyph> &fNameGlyphs)
 		advance += fNameGlyphs[i].advance;
 	}
 	
+	//Get ith Glyph
+
+	
 	for(int i = 0; i < u; i++)
 	{
 		curveColours[i][0] = 1;
 		curveColours[i][1] = 0;
 		curveColours[i][2] = 0;
 	}
+	if(scene == 4)
+	{
+		int helper;
+		for(int i = 0; i < u; i++)
+		{
+			vertices[i][0] += delta;
+		}	
+		delta = delta - delta2;
+		
+		if(moreFont == 2 || moreFont == 3)
+			helper = 12;
+		else
+			helper = 0;
+		
+		if (vertices[u-1][0] < -16 + helper)
+			delta = 1;
+	}
+
 
     geometry->elementCount = 20;
 
@@ -423,23 +436,14 @@ void RenderGlyphs(MyGeometry *geometry, MyShader *shader, vector<int> *degrees)
     
     glBindVertexArray(geometry->vertexArray);
 	
-	if(scene == 3)
+	if(scene == 3 || scene == 4)
 	{
 		for(uint i = 0; i < degrees->size(); i++)
 		{
 			glUniform1i(curLoc, degrees->at(i));
 			glDrawArrays(GL_PATCHES, i*4, 4);
 		}
-	}
-	if(scene == 4)
-	{
-		for(uint i = 0; i < degrees->size(); i++)
-		{
-			glUniform1i(curLoc, degrees->at(i));
-			glDrawArrays(GL_PATCHES, i*4, 4);
-		}
-	}
-		
+	}		
 
     // reset state to default (no shader or geometry bound)
     glBindVertexArray(0);
@@ -464,7 +468,7 @@ void RenderGlyphLine(MyGeometry *geometry, MyShader *shader, vector<int> *degree
 	if((version == 2) && (scene == 3))
 	{
 		//tangent lines		
-		for(int i = 0; i <  (4 * degrees->size()); i++)
+		for(uint i = 0; i <  (4 * degrees->size()); i++)
 		{
 			glUniform1f(colLoc, 0.7);
 			if((i % 4) == 0) 
@@ -473,7 +477,7 @@ void RenderGlyphLine(MyGeometry *geometry, MyShader *shader, vector<int> *degree
 		
 		//off line control points
 		glPointSize(4);
-		for(int i = 0; i < (4 * degrees->size()); i++)
+		for(uint i = 0; i < (4 * degrees->size()); i++)
 		{
 			glUniform1f(colLoc, 0.7);
 			if((i % 4) == 1)
@@ -482,7 +486,7 @@ void RenderGlyphLine(MyGeometry *geometry, MyShader *shader, vector<int> *degree
 		
 		//on line control points
 		glPointSize(4);
-		for(int i = 0; i < (4 * degrees->size()); i++)
+		for(uint i = 0; i < (4 * degrees->size()); i++)
 		{
 			glUniform1f(colLoc, 0.0);
 			if(((i % 4) == 0) || ((i % 4) == 2))
@@ -639,6 +643,16 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 		font = 2;	
 	if (key == GLFW_KEY_D && action == GLFW_PRESS)
 		font = 3;	
+	if (key == GLFW_KEY_Z && action == GLFW_PRESS)
+		moreFont = 1;	
+	if (key == GLFW_KEY_X && action == GLFW_PRESS)
+		moreFont = 2;	
+	if (key == GLFW_KEY_C && action == GLFW_PRESS)
+		moreFont = 3;	
+	if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+		delta2 = delta2 * 0.9;	
+	if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+		delta2 = delta2 * 1.1;	
 }
 
 // ==========================================================================
@@ -687,6 +701,15 @@ int main(int argc, char *argv[])
     GlyphExtractor* ge4 = new GlyphExtractor();
     if(!ge4 ->LoadFontFile("AlexBrush-Regular.ttf"))
       cout << "font Inconsolata.otf loaded" << endl;
+    
+	GlyphExtractor* ge5 = new GlyphExtractor();
+    if(!ge5 ->LoadFontFile("Inconsolata.otf"))
+      cout << "font Inconsolata.otf loaded" << endl;
+  
+	GlyphExtractor* ge6 = new GlyphExtractor();
+    if(!ge6 ->LoadFontFile("SourceSansPro-Regular.otf"))
+      cout << "font Inconsolata.otf loaded" << endl;
+  
 
     // query and print out information about our OpenGL environment
     QueryGLVersion();
@@ -706,15 +729,20 @@ int main(int argc, char *argv[])
 	vector<MyGlyph> fNameGlyphs;
 	vector<MyGlyph> fNameGlyphs2;
 	vector<MyGlyph> fNameGlyphs3;
+	vector<MyGlyph> bf;
+	vector<MyGlyph> bf2;
+	vector<MyGlyph> bf3;
 
 	vector<int> degrees;
 	vector<int> degrees2;
 	vector<int> degrees3;
 	vector<int> degrees4;
+	vector<int> degrees5;
+	vector<int> degrees6;
 
 
 	string fName = "Petras";
-	string bf = "The";
+	string bfString = "The quick brown fox jumps over the lazy dog.";
 	
 	//First name array init
 	for(uint i = 0; i < fName.size(); i++)
@@ -725,6 +753,16 @@ int main(int argc, char *argv[])
 		fNameGlyphs2.push_back(newGlyph2);
 		MyGlyph newGlyph3 = ge3->ExtractGlyph(fName[i]);
 		fNameGlyphs3.push_back(newGlyph3);	
+	}
+	
+	for(uint i = 0; i < bfString.size(); i++)
+	{
+		MyGlyph newGlyph = ge4->ExtractGlyph(bfString[i]);
+		bf.push_back(newGlyph);
+		MyGlyph newGlyph2 = ge5->ExtractGlyph(bfString[i]);
+		bf2.push_back(newGlyph2);
+		MyGlyph newGlyph3 = ge6->ExtractGlyph(bfString[i]);
+		bf3.push_back(newGlyph3);	
 	}
 	
 
@@ -761,6 +799,40 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+	//brown fox
+	for(uint i = 0; i < bf.size(); i++)
+	{
+		for(uint j = 0; j < bf[i].contours.size(); j++)
+		{
+			for(uint k = 0; k < bf[i].contours[j].size(); k++)
+			{	
+				degrees4.push_back(bf[i].contours[j][k].degree);
+			}
+		}
+	}
+	
+	for(uint i = 0; i < bf2.size(); i++)
+	{
+		for(uint j = 0; j < bf2[i].contours.size(); j++)
+		{
+			for(uint k = 0; k < bf2[i].contours[j].size(); k++)
+			{	
+				degrees5.push_back(bf2[i].contours[j][k].degree);
+			}
+		}
+	}
+	
+	for(uint i = 0; i < bf3.size(); i++)
+	{
+		for(uint j = 0; j < bf3[i].contours.size(); j++)
+		{
+			for(uint k = 0; k < bf3[i].contours[j].size(); k++)
+			{	
+				degrees6.push_back(bf3[i].contours[j][k].degree);
+			}
+		}
+	}
+
 
     // call function to create and fill buffers with geometry data
     MyGeometry geometry, glyphGeometry;
@@ -811,13 +883,45 @@ int main(int argc, char *argv[])
 				RenderGlyphLine(&glyphGeometry, &lineShader, &degrees3);				
 			}
 		}
-		           
+        if(moreFont == 1)
+        {
+			if(scene == 4)
+			{
+				if (!InitializeGlyphGeometry(&glyphGeometry, bf))
+					cout << "Program failed to intialize geometry!" << endl;
+					
+				RenderGlyphs(&glyphGeometry, &shader, &degrees4);
+			}
+		}
+        if(moreFont == 2)
+        {
+			if(scene == 4)
+			{
+				if (!InitializeGlyphGeometry(&glyphGeometry, bf2))
+					cout << "Program failed to intialize geometry!" << endl;
+					
+				RenderGlyphs(&glyphGeometry, &shader, &degrees5);
+			}
+		}
+        if(moreFont == 3)
+        {
+			if(scene == 4)
+			{
+				if (!InitializeGlyphGeometry(&glyphGeometry, bf3))
+					cout << "Program failed to intialize geometry!" << endl;
+					
+				RenderGlyphs(&glyphGeometry, &shader, &degrees6);
+			}
+		}
+		
+		
+			           
         // scene is rendered to the back buffer, so swap to front for display
         glfwSwapBuffers(window);
 
         // sleep until next event before drawing again
-        glfwWaitEvents();
-        //pullevents
+        //glfwWaitEvents();
+        glfwPollEvents();
         //glfwGetTime(); //grabs clock
     }
 
